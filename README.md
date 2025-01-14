@@ -19,9 +19,9 @@ Context ctx(
 auto val = ctx.mCaller(Caller::CallConv::ARM32_CDECL,
     /*Pushing code to the stack for simplicity ( Dont try at home =) )*/
     *ctx.mStack.Push(Uint32ToUint8({
-        0xE3A00206, // mov r0, #0x60000000
-        0xE5900000,	// ldr r0, [r0] ; 4 byte IO
-        0xE12FFF1E	// bx lr
+        0xE3A00206,    // mov r0, #0x60000000
+        0xE5900000,    // ldr r0, [r0] ; 4 byte IO
+        0xE12FFF1E     // bx lr
         })));
 assert(val == 0xC0FEEu);
 ```
