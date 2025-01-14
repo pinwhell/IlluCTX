@@ -7,7 +7,7 @@ This tool is ideal for anyone with a solid understanding of low-level systems wh
 Currently available as a prototype, `IllusoryCTX` supports flexible modifications to accommodate various architectures, empowering users to extend its capabilities to fit unique use cases.
 
 # Example
-Simple example reading demostrating `I/O` routing to its host address space. for the test  `0x60000000` must be preallocated holding a value of `0xC0FEE`. 
+Simple example reading and demostrating `I/O` routing to its host address space. for the test  `0x60000000` must be preallocated holding a value of `0xC0FEE`. 
 
 ```cpp
 simplistic::proc::Self self{}; // This Process
@@ -25,4 +25,4 @@ auto val = ctx.mCaller(Caller::CallConv::ARM32_CDECL,
         })));
 assert(val == 0xC0FEEu);
 ```
-Leveraging `SimplisticProc` already implements `simplistic::io::IIO` for us. You can implement your own leveraging `SimplisticIO` too. `self.Address(0)` Would build that `simplistic::io::Object` that `IlluCTX` requires to route the entire `Address Space IO`
+Leveraging `SimplisticProc` already implements `simplistic::io::IIO` for us. You can reuse it. or simply implement your own leveraging `SimplisticIO` too. `self.Address(0)` Would build that `simplistic::io::Object` that `IlluCTX` requires to route the entire `Address Space IO`
