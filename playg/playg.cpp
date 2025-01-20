@@ -20,38 +20,51 @@ auto Uint32ToUint8 = [](const std::vector<uint32_t>& u32Arr) {
 	return u8Arr;
 	};
 
-int main()
+#define HAS_CODE_LOGGER
+
+//std::unique_ptr<Capstone> CodeLoggerCapstone;
+//const auto CodeLogger = [&](const Uc::Hooks::Ev& ev, auto& next) {
+//	auto& code = ev.mCode;
+//	auto instBlob = ctx.mUc.mIo.Address(code.mAddress).ReadBlob(code.mSize);
+//	auto instDism = cston.DisassembleOne(instBlob.data(), code.mAddress);
+//	printf("Executed:%s\t %s %s\n",
+//		CalledAtResolver::Addr2Line(
+//			ctx.mUc.mRegs.Read<std::uint32_t>(
+//				UC_ARM_REG_PC)).c_str(),
+//		instDism.mInsn.mnemonic,
+//		instDism.mInsn.op_str
+//	);
+//	return next(ev);
+//	};
+
+void ARMFnInvokeShowcase1()
 {
 	simplistic::proc::Self self{}; // This Process
-	Context ctx(UC_ARCH_ARM, UC_MODE_ARM, self.Address(0), DEFAULT_STACK_SIZE, UC_PROT_ALL);
-#ifdef HAS_CSTONE
-	Capstone cston(CS_ARCH_ARM, CS_MODE_ARM);
-	ctx.mUc.mHooks.AddHook(UC_HOOK_CODE, [&](const Uc::Hooks::Ev& ev, auto& next) {
-		auto& code = ev.mCode;
-		auto instBlob = ctx.mUc.mIo.Address(code.mAddress).ReadBlob(code.mSize);
-		auto instDism = cston.DisassembleOne(instBlob.data(), code.mAddress);
-		printf("Executed:%s\t %s %s\n",
-			CalledAtResolver::Addr2Line(
-				ctx.mUc.mRegs.Read<std::uint32_t>(
-					UC_ARM_REG_PC)).c_str(),
-			instDism.mInsn.mnemonic,
-			instDism.mInsn.op_str
-		);
-		return next(ev);
-		});
-#endif
-	auto res = ctx.mCaller(Caller::CallConv::ARM32_CDECL,
+	Context ctx(
+		UC_ARCH_ARM, UC_MODE_ARM,
+		self.Address(0),
+		DEFAULT_STACK_SIZE,
+		UC_PROT_ALL);
+	auto val = ctx.mCaller(Caller::CallConv::ARM32_CDECL,
+		/** Compiled Sample
+		int foo(int a, int b, int c, int d, int e, int f)
+		{
+			return a + b + c + d + e + f;
+		}*/
 		*ctx.mStack.Push(Uint32ToUint8({ // RWX Stack Required
-			0xE92D4800, //  push {r11, lr}
-			0xE0810000, //  add  r0, r1, r0
-			0xE59DE008, //  ldr  lr,[sp, #8]
-			0xE0800002, //  add  r0, r0, r2
-			0xE59DC00C, //  ldr  r12,[sp, #12]
-			0xE0800003, //  add  r0, r0, r3
-			0xE080000E, //  add  r0, r0, lr
-			0xE080000C, //  add  r0, r0, r12
-			0xE8BD8800, //  pop  {r11, pc}
-			})), 1u, 2u, 3u, 4u, 5u, 6u); // 21u
-	std::cout << "res=" << res << std::endl;
+			0xE3A00206, // mov r0, #0x60000000
+			0xE5900000,	// ldr r0, [r0] ; 4 byte IO
+			0xE12FFF1E	// bx lr
+			})));
+	assert(val == 0xC0FEEu);
+}
+
+int main()
+{
+#ifdef _WIN32
+	if (void* ptr = VirtualAlloc((void*)0x60000000, 0x1000, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE))
+		*(uint64_t*)ptr = 0xC0FEEu;
+#endif
+	ARMFnInvokeShowcase1();
 	return 0;
 }
